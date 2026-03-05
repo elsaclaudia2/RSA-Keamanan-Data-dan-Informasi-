@@ -1,0 +1,100 @@
+import random
+import math
+
+class SimpleRSA:
+    def __init__(self):
+        self.p = self.generate_prime()
+        self.q = self.generate_prime()
+        while self.p == self.q:
+            self.q = self.generate_prime()
+
+        self.n = self.p * self.q
+        self.phi = (self.p - 1) * (self.q - 1)
+
+        self.e = self.choose_e()
+        self.d = self.mod_inverse(self.e, self.phi)
+
+    # ===============================
+    # Cek bilangan prima
+    # ===============================
+    def is_prime(self, num):
+        if num <= 1:
+            return False
+        for i in range(2, int(math.sqrt(num)) + 1):
+            if num % i == 0:
+                return False
+        return True
+
+    # ===============================
+    # Generate bilangan prima
+    # ===============================
+    def generate_prime(self, start=100, end=300):
+        while True:
+            candidate = random.randint(start, end)
+            if self.is_prime(candidate):
+                return candidate
+
+    # ===============================
+    # Pilih nilai e
+    # ===============================
+    def choose_e(self):
+        e = 3
+        while math.gcd(e, self.phi) != 1:
+            e += 2
+        return e
+
+    # ===============================
+    # Extended Euclidean Algorithm
+    # ===============================
+    def extended_gcd(self, a, b):
+        if b == 0:
+            return a, 1, 0
+        gcd, x1, y1 = self.extended_gcd(b, a % b)
+        x = y1
+        y = x1 - (a // b) * y1
+        return gcd, x, y
+
+    # ===============================
+    # Modular Inverse
+    # ===============================
+    def mod_inverse(self, e, phi):
+        gcd, x, y = self.extended_gcd(e, phi)
+        if gcd != 1:
+            raise Exception("Tidak ada modular inverse")
+        return x % phi
+
+    # ===============================
+    # Enkripsi
+    # ===============================
+    def encrypt(self, plaintext):
+        return pow(plaintext, self.e, self.n)
+
+    # ===============================
+    # Dekripsi
+    # ===============================
+    def decrypt(self, ciphertext):
+        return pow(ciphertext, self.d, self.n)
+
+
+# ===============================
+# Main Program
+# ===============================
+rsa = SimpleRSA()
+
+print("=== KEY GENERATION ===")
+print("p =", rsa.p)
+print("q =", rsa.q)
+print("n =", rsa.n)
+print("phi(n) =", rsa.phi)
+print("Public Key (e, n) =", (rsa.e, rsa.n))
+print("Private Key (d, n) =", (rsa.d, rsa.n))
+
+# Contoh pesan
+message = 25
+cipher = rsa.encrypt(message)
+plain = rsa.decrypt(cipher)
+
+print("\n=== ENKRIPSI & DEKRIPSI ===")
+print("Plaintext :", message)
+print("Ciphertext:", cipher)
+print("Decrypted :", plain)
